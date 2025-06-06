@@ -10,19 +10,19 @@ app.use(express.static('frontend'));
 
 scheduler.loadCalls();
 
-app.post('/schedule-call', (req, res) => {
-  const { phoneNumber, callTime, topic, userName } = req.body;
+app.post('/schedule-call', async (req, res) => {
+  const { phoneNumber, topic, userName } = req.body;
 
-  if (!phoneNumber || !callTime) {
-    return res.status(400).json({ error: 'phoneNumber and callTime are required' });
+  if (!phoneNumber) {
+    return res.status(400).json({ error: 'phoneNumber is required' });
   }
 
   try {
-    const id = scheduler.scheduleCall({ phoneNumber, callTime, topic, userName });
-    res.json({ status: 'scheduled', id });
+    const id = await scheduler.scheduleCall({ phoneNumber, topic, userName });
+    res.json({ status: 'initiated', id });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to schedule call' });
+    res.status(500).json({ error: 'Failed to initiate call' });
   }
 });
 
