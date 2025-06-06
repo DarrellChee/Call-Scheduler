@@ -1,7 +1,6 @@
 function App() {
   const [form, setForm] = React.useState({
     phoneNumber: '',
-    callTime: '',
     topic: '',
     userName: ''
   });
@@ -13,7 +12,7 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus('Scheduling...');
+    setStatus('Calling...');
     try {
       const res = await fetch('/schedule-call', {
         method: 'POST',
@@ -22,7 +21,7 @@ function App() {
       });
       const data = await res.json();
       if (res.ok) {
-        setStatus('Scheduled with ID: ' + data.id);
+        setStatus('Call initiated with ID: ' + data.id);
       } else {
         setStatus(data.error || 'Error scheduling');
       }
@@ -33,16 +32,12 @@ function App() {
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial' }}>
-      <h2>Schedule a Call</h2>
+    <div id="app-container">
+      <h2>Place a Call</h2>
       <form onSubmit={handleSubmit}>
         <div>
           <label>Phone Number: </label>
           <input name="phoneNumber" value={form.phoneNumber} onChange={handleChange} required />
-        </div>
-        <div>
-          <label>Call Time (ISO): </label>
-          <input name="callTime" value={form.callTime} onChange={handleChange} required />
         </div>
         <div>
           <label>Topic: </label>
@@ -52,7 +47,7 @@ function App() {
           <label>User Name: </label>
           <input name="userName" value={form.userName} onChange={handleChange} />
         </div>
-        <button type="submit">Schedule</button>
+        <button type="submit">Call Now</button>
       </form>
       <p>{status}</p>
     </div>
