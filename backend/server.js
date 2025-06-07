@@ -36,11 +36,20 @@ app.post('/voice', async (req, res) => {
   const callSid = req.body.CallSid;
   const chat = await gemini.createChat();
   sessions[callSid] = { chat, turns: 0 };
+
+  // Generate welcome prompt via Gemini TTS
   const fileName = `${callSid}-welcome.mp3`;
   const filePath = path.join(__dirname, 'audio', fileName);
   await gemini.synthesizeSpeech('Hello, how can I help you today?', filePath);
   const fileUrl = `${process.env.PUBLIC_HOST}/audio/${fileName}`;
-  const twiml = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Play>${fileUrl}</Play>\n  <Gather input="speech" action="/conversation" method="POST" timeout="5" />\n</Response>`;
+
+  // TwiML to play the welcome audio and gather user response
+  const twiml = `<?xml version="1.0" encoding="UTF-8"?>\n` +
+                `<Response>\n` +
+                `  <Play>${fileUrl}</Play>\n` +
+                `  <Gather input="speech" action="/conversation" method="POST" timeout="5" />\n` +
+                `</Response>`;
+
   res.type('text/xml').send(twiml);
 });
 
@@ -54,13 +63,21 @@ app.post('/conversation', async (req, res) => {
   session.turns += 1;
   const responseText = await gemini.generateResponse(session.chat, userText);
 
+  // Generate response audio via Gemini TTS
   const fileName = `${callSid}-${Date.now()}.mp3`;
   const filePath = path.join(__dirname, 'audio', fileName);
   await gemini.synthesizeSpeech(responseText, filePath);
   const fileUrl = `${process.env.PUBLIC_HOST}/audio/${fileName}`;
 
   const shouldHangup = /goodbye/i.test(userText) || session.turns >= 5;
-  const twiml = `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Play>${fileUrl}</Play>\n  ${shouldHangup ? '<Hangup/>' : '<Gather input="speech" action="/conversation" method="POST" timeout="5" />'}\n</Response>`;
+  const twiml = `<?xml version="1.0" encoding="UTF-8"?>\n` +
+                `<Response>\n` +
+                `  <Play>${fileUrl}</Play>\n` +
+                (shouldHangup
+                  ? `  <Hangup/>\n` 
+                  : `  <Gather input="speech" action="/conversation" method="POST" timeout="5" />\n`) +
+                `</Response>`;
+
   if (shouldHangup) delete sessions[callSid];
   res.type('text/xml').send(twiml);
 });

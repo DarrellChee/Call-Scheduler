@@ -22,6 +22,7 @@ async function synthesizeSpeech(text, filePath) {
     contents: text,
     config: { responseMimeType: 'audio/mp3' }
   });
+
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, response.audio, 'binary');
 }
