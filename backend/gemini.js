@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const textToSpeech = require('@google-cloud/text-to-speech');
+const { GoogleGenAI } = require('@google/genai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const ttsClient = new textToSpeech.TextToSpeechClient();
+const voiceAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
 async function createChat() {
   const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
@@ -17,13 +17,14 @@ async function generateResponse(chat, message) {
 }
 
 async function synthesizeSpeech(text, filePath) {
-  const [response] = await ttsClient.synthesizeSpeech({
-    input: { text },
-    voice: { languageCode: 'en-US' },
-    audioConfig: { audioEncoding: 'MP3' }
+  const response = await voiceAI.models.generateContent({
+    model: 'gemini-2.0-flash-live-001',
+    contents: text,
+    config: { responseMimeType: 'audio/mp3' }
   });
+
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, response.audioContent, 'binary');
+  fs.writeFileSync(filePath, response.audio, 'binary');
 }
 
 module.exports = { createChat, generateResponse, synthesizeSpeech };
