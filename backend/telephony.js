@@ -19,4 +19,17 @@ async function makeCall(to, twiml) {
   });
 }
 
-module.exports = { makeCall };
+async function makeCallUrl(to, url) {
+  if (!accountSid || !authToken || !fromNumber) {
+    console.error('Twilio credentials are not set');
+    return;
+  }
+  return client.calls.create({
+    to,
+    from: fromNumber,
+    url,
+    method: 'POST'
+  });
+}
+
+module.exports = { makeCall, makeCallUrl };
